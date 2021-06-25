@@ -14,8 +14,36 @@ class VillaApi {
         self.baseUrl = baseUrl
     }
     
-//    func generalRequest<T: Decodable>(method:HTTPMethod, url:String, type: T.Type, parameters:[String:String], headers:){
-//        AF.request(url, method: method,parameters:[:], headers: [:])
-//    }
+    func getRequest<T:Decodable>(of type: T.Type = T.self, authorization:Authorization = .none, url:String, functionName:String="no function name", callback:@escaping (T?)->Void){
+        
+        var headers:HTTPHeaders = [:]
+        switch authorization {
+        case .none:
+            debugPrint("\(functionName) uses no authorization")
+        case .apiKey(let apikey):
+            headers["Authorization"] = apikey
+            debugPrint("\(functionName) uses apikey")
+        case .cognito(let cognitoKey):
+            headers["Authorization"] = cognitoKey
+            debugPrint("\(functionName) uses cognitoKey")
+        }
+        
+        AF.request(url, method: .get, headers: headers)
+            .responseDecodable(of: T.self) { response in
+                if let result = response.value{
+                    callback(result)
+                }
+            }
+            .responseJSON { response in
+                debugPrint("error decoding, response is \(String(describing: response.value))")
+            }
+    }
+    
+    
+    enum Authorization{
+        case none
+        case apiKey(apikey:String)
+        case cognito(cognitoKey:String)
+    }
     
 }

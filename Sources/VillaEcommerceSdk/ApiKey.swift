@@ -10,8 +10,6 @@ import Alamofire
 
 class ApiKey:VillaApi{
     
-    
-    
     func getMockupKey(path:String = "auth/check/cognitotest1", callback: @escaping (String?)->Void){
         
         class MockupKey:Codable {
@@ -19,15 +17,13 @@ class ApiKey:VillaApi{
         }
         
         let url:String = self.baseUrl + path
-        AF.request(url, method: .get)
-            .responseDecodable(of: MockupKey.self) { response in
-                if let result = response.value{
-                    callback(result.key)
-                }
+        
+        self.getRequest(of: MockupKey.self, url: url) { mockupKey in
+            if let mockupKey = mockupKey{
+                callback(mockupKey.key)
             }
-            .responseJSON { response in
-                debugPrint("error decoding, response is \(String(describing: response.value))")
-            }
+        }
+        
     }
     
     @available(iOS 15.0, *)
