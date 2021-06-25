@@ -7,6 +7,8 @@
 
 import Foundation
 import Alamofire
+import AWSSigner
+
 class VillaApi {
     let baseUrl:String
     
@@ -47,6 +49,16 @@ class VillaApi {
         case apiKey(apikey:String)
         case cognito(cognitoKey:String)
         case aws(key:String, secret:String)
+    }
+    
+    
+    
+    func getAwsHeader(key:String, secret:String, url:String, method:HTTPMethod){
+        let credentials = StaticCredential(accessKeyId: key, secretAccessKey: secret)
+        let signer = AWSSigner(credentials: credentials, name: "s3", region: "us-east-1")
+        let signedURL = signer.signURL(
+                            url: URL(string:url)!,
+                            method: method)
     }
     
 }
