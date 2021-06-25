@@ -26,6 +26,8 @@ class VillaApi {
         case .cognito(let cognitoKey):
             headers["Authorization"] = cognitoKey
             debugPrint("\(functionName) uses cognitoKey")
+        case .aws(let key, let secret):
+            debugPrint("\(functionName) uses aws signature")
         }
         
         AF.request(url, method: .get, headers: headers)
@@ -44,6 +46,7 @@ class VillaApi {
         case none
         case apiKey(apikey:String)
         case cognito(cognitoKey:String)
+        case aws(key:String, secret:String)
     }
     
 }
