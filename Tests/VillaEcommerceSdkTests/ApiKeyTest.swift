@@ -1,7 +1,15 @@
+//
+//  File.swift
+//  
+//
+//  Created by nic wanavit on 6/26/21.
+//
+
+import Foundation
 import XCTest
 @testable import VillaEcommerceSdk
 
-final class VillaEcommerceSdkTests: XCTestCase {
+final class ApiKeyTest: XCTestCase {
     func testExample() throws {
         XCTAssertEqual(VillaEcommerceSdk().text, "Hello, World!")
     }
