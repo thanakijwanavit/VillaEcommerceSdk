@@ -10,7 +10,7 @@ import Alamofire
 
 class ApiKey:VillaApi{
     
-    func getMockupKey(path:String = "auth/check/cognitotest1", callback: @escaping (String?)->Void){
+    func getMockupKey(path:String = "auth/check/cognitotest1", authorization: VillaApi.Authorization, callback: @escaping (String?)->Void){
         
         class MockupKey:Codable {
             let key:String
@@ -18,7 +18,7 @@ class ApiKey:VillaApi{
         
         let url:String = self.baseUrl + path
         
-        self.getRequest(of: MockupKey.self, url: url) { mockupKey in
+        self.getRequest(of: MockupKey.self,authorization: authorization, url: url) { mockupKey in
             if let mockupKey = mockupKey{
                 callback(mockupKey.key)
             }
@@ -27,9 +27,9 @@ class ApiKey:VillaApi{
     }
     
     @available(iOS 15.0, *)
-    func getMockupKey()async->String? {
+    func getMockupKey( authorization: VillaApi.Authorization )async->String? {
         let result = await withUnsafeContinuation { continuation in
-            self.getMockupKey { result in
+            self.getMockupKey(authorization: authorization) { result in
                 continuation.resume(returning: result)
             }
         }
