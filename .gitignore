@@ -7,3 +7,4 @@ DerivedData/
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .awsKey
 Sources/VillaEcommerceSdk/awskey
+Tests/VillaEcommerceSdkTests/TestConfig.swift
