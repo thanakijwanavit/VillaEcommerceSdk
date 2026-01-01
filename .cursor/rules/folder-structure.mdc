@@ -1,0 +1,56 @@
+---
+description: Overall repository folder structure and organization
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Villa Ecommerce SDK - Repository Structure
+
+## Overall Structure
+
+This repository contains SDK implementations for Villa Ecommerce API in multiple languages. The folder structure should be organized as follows:
+
+```
+VillaEcommerceSdk/
+├── docs/                    # Documentation files
+│   ├── api/                 # API documentation
+│   ├── guides/              # Usage guides and tutorials
+│   └── examples/            # Code examples
+├── swift/                   # Swift SDK implementation
+│   ├── Sources/             # Swift source code
+│   ├── Tests/               # Swift test files
+│   └── Package.swift        # Swift Package Manager manifest
+├── python/                  # Python SDK implementation
+│   ├── src/                 # Python source code
+│   ├── tests/               # Python test files
+│   ├── setup.py             # Python setup file
+│   └── requirements.txt     # Python dependencies
+├── javascript/              # JavaScript/TypeScript SDK implementation
+│   ├── src/                 # JavaScript/TypeScript source code
+│   ├── tests/               # JavaScript test files
+│   ├── package.json         # Node.js package manifest
+│   └── tsconfig.json        # TypeScript configuration
+└── README.md                # Main repository README
+```
+
+## Code Organization Rules
+
+1. **Language Separation**: Keep implementations in their respective language folders. Do not mix languages within the same directory.
+
+2. **Shared Documentation**: Place shared documentation (API specs, common guides) in `/docs`. Language-specific documentation can be in each language folder's README.
+
+3. **Consistency**: Maintain consistent API interfaces across all language implementations. The same functionality should be available in Swift, Python, and JavaScript with language-appropriate patterns.
+
+4. **Tests**: Each language folder should have its own test directory following language-specific testing conventions.
+
+5. **Dependencies**: Each language folder manages its own dependencies:
+   - Swift: `Package.swift`
+   - Python: `requirements.txt` or `pyproject.toml`
+   - JavaScript: `package.json`
+
+## File Naming Conventions
+
+- **Documentation**: Use `.md` extension, kebab-case (e.g., `getting-started.md`)
+- **Swift**: Use `.swift` extension, PascalCase for files matching class/struct names
+- **Python**: Use `.py` extension, snake_case for module names
+- **JavaScript**: Use `.js` or `.ts` extension, camelCase for file names

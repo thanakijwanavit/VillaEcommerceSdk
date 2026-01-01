@@ -1,0 +1,55 @@
+---
+description: JavaScript/TypeScript SDK coding standards and folder structure
+globs: ["javascript/**/*.{js,ts,jsx,tsx}"]
+alwaysApply: true
+---
+
+# JavaScript/TypeScript SDK Rules
+
+## Folder Structure
+
+The `/javascript` directory should be organized as follows:
+
+```
+javascript/
+├── src/                 # JavaScript/TypeScript source code
+├── tests/               # JavaScript test files (or __tests__/)
+├── package.json         # Node.js package manifest
+└── tsconfig.json        # TypeScript configuration (if using TypeScript)
+```
+
+## Coding Standards
+
+- Use camelCase for variables and functions
+- Use PascalCase for classes and types
+- Prefer TypeScript for type safety
+- Follow ESLint/Prettier configuration
+- Use modern ES6+ features (async/await, destructuring, etc.)
+- Export functions and classes explicitly
+
+## TypeScript Guidelines
+
+- Use TypeScript for all new code
+- Define interfaces for API responses
+- Use strict type checking
+- Avoid `any` type - use `unknown` when type is truly unknown
+- Provide type definitions in `.d.ts` files if needed
+
+## Package Structure
+
+- Organize code into logical modules
+- Keep entry point clear and simple
+- Use barrel exports (`index.ts`) for public API
+
+## Testing
+
+- Write unit tests for all public APIs
+- Use Jest, Mocha, or similar testing framework
+- Keep test files in `tests/` or `__tests__/` directory
+- Name test files with `.test.ts` or `.spec.ts` suffix
+
+## Dependencies
+
+- Manage dependencies in `package.json`
+- Use exact versions or version ranges appropriately
+- Keep dependencies up to date and secure

@@ -1,0 +1,48 @@
+---
+description: Python SDK coding standards and folder structure
+globs: ["python/**/*.py"]
+alwaysApply: true
+---
+
+# Python SDK Rules
+
+## Folder Structure
+
+The `/python` directory should be organized as follows:
+
+```
+python/
+├── src/                 # Python source code (package structure)
+├── tests/               # Python test files
+├── setup.py             # Python setup file (or pyproject.toml)
+└── requirements.txt     # Python dependencies
+```
+
+## Coding Standards
+
+- Follow PEP 8 style guidelines
+- Use snake_case for function and variable names
+- Use PascalCase for class names
+- Organize as a proper Python package with `__init__.py` files
+- Include type hints for function signatures
+- Include docstrings for all public classes and functions
+- Use meaningful variable and function names
+
+## Package Structure
+
+- Create a proper Python package structure with `__init__.py` files
+- Group related functionality into modules
+- Keep the package structure flat and intuitive
+
+## Testing
+
+- Write unit tests for all new features
+- Use pytest or unittest framework
+- Keep test files in `tests/` directory
+- Name test files with `test_` prefix
+
+## Dependencies
+
+- List all dependencies in `requirements.txt` or `pyproject.toml`
+- Pin versions for production dependencies
+- Keep dependencies minimal and well-documented

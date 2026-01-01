@@ -1,0 +1,43 @@
+---
+description: Swift SDK coding standards and folder structure
+globs: ["swift/**/*.swift", "Sources/**/*.swift", "Tests/**/*.swift"]
+alwaysApply: true
+---
+
+# Swift SDK Rules
+
+## Folder Structure
+
+The `/swift` directory should be organized as follows:
+
+```
+swift/
+├── Sources/             # Swift source code
+├── Tests/               # Swift test files
+└── Package.swift        # Swift Package Manager manifest
+```
+
+## Coding Standards
+
+- Follow Swift naming conventions:
+  - PascalCase for types (classes, structs, enums, protocols)
+  - camelCase for variables, functions, and methods
+- Organize files by feature/module
+- Keep test files parallel to source files
+- Use access control modifiers appropriately (`public`, `internal`, `private`)
+- Prefer `struct` over `class` when possible
+- Use `Codable` for API response models
+- Support async/await for iOS 15+ where applicable
+
+## Package Structure
+
+- All source files go in `Sources/VillaEcommerceSdk/`
+- All test files go in `Tests/VillaEcommerceSdkTests/`
+- Maintain proper module organization
+
+## Testing
+
+- Write unit tests for all public APIs
+- Use XCTest framework
+- Follow naming convention: `testFunctionName()`
+- Keep tests organized and maintainable
