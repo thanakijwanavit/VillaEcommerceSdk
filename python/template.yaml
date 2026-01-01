@@ -1,0 +1,166 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: S3 bucket for Villa Ecommerce SDK cache
+
+Parameters:
+  BucketName:
+    Type: String
+    Default: villa-ecommerce-sdk-cache
+    Description: Name of the S3 bucket for caching
+    AllowedPattern: '^[a-z0-9][a-z0-9-]*[a-z0-9]$'
+    ConstraintDescription: Bucket name must be lowercase, 3-63 characters, start and end with letter or number
+  
+  EnableVersioning:
+    Type: String
+    Default: 'true'
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Description: Enable versioning on the bucket
+  
+  EnableLifecycleRules:
+    Type: String
+    Default: 'true'
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Description: Enable lifecycle rules to delete old cache files after 30 days
+  
+  CacheRetentionDays:
+    Type: Number
+    Default: 30
+    Description: Number of days to retain cache files before deletion
+    MinValue: 1
+    MaxValue: 365
+
+Resources:
+  # S3 Bucket for caching
+  VillaSDKCacheBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+      VersioningConfiguration:
+        Status: !If [VersioningEnabled, Enabled, Suspended]
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        !If
+          - LifecycleEnabled
+          - Rules:
+              - Id: DeleteOldCacheFiles
+                Status: Enabled
+                Prefix: villa-sdk/
+                ExpirationInDays: !Ref CacheRetentionDays
+                NoncurrentVersionExpirationInDays: !Ref CacheRetentionDays
+          - !Ref AWS::NoValue
+      NotificationConfiguration:
+        # Optional: Add SNS/SQS notifications if needed
+        # CloudWatchConfigurations:
+        #   - Event: s3:ObjectCreated:*
+        #     CloudWatchConfiguration:
+        #       LogGroupName: !Ref CacheLogGroup
+      Tags:
+        - Key: Name
+          Value: VillaEcommerceSDKCache
+        - Key: Purpose
+          Value: API Response Caching
+        - Key: ManagedBy
+          Value: SAM
+
+  # IAM Policy for SDK access
+  VillaSDKCachePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: VillaSDKCacheAccessPolicy
+      Description: Policy for accessing Villa SDK cache bucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCacheAccess
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+              - s3:ListBucket
+              - s3:HeadObject
+            Resource:
+              - !Sub '${VillaSDKCacheBucket}/*'
+              - !GetAtt VillaSDKCacheBucket.Arn
+
+  # Bucket Policy (allows IAM users/roles in the account)
+  # Access is controlled via IAM policies attached to users/roles
+  VillaSDKCacheBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref VillaSDKCacheBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowSDKCacheAccess
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+              - s3:ListBucket
+              - s3:HeadObject
+            Resource:
+              - !Sub '${VillaSDKCacheBucket}/*'
+              - !GetAtt VillaSDKCacheBucket.Arn
+            # Note: Actual access control is via IAM policies attached to users/roles
+            # This bucket policy allows any IAM principal in the account,
+            # but they still need the VillaSDKCachePolicy attached to access
+
+Conditions:
+  VersioningEnabled: !Equals [!Ref EnableVersioning, 'true']
+  LifecycleEnabled: !Equals [!Ref EnableLifecycleRules, 'true']
+
+Outputs:
+  BucketName:
+    Description: Name of the S3 bucket for caching
+    Value: !Ref VillaSDKCacheBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-BucketName'
+  
+  BucketArn:
+    Description: ARN of the S3 bucket
+    Value: !GetAtt VillaSDKCacheBucket.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-BucketArn'
+  
+  BucketDomainName:
+    Description: Domain name of the bucket
+    Value: !GetAtt VillaSDKCacheBucket.DomainName
+    Export:
+      Name: !Sub '${AWS::StackName}-BucketDomainName'
+  
+  PolicyArn:
+    Description: ARN of the IAM managed policy for bucket access
+    Value: !Ref VillaSDKCachePolicy
+    Export:
+      Name: !Sub '${AWS::StackName}-PolicyArn'
+  
+  UsageInstructions:
+    Description: Instructions for using the bucket
+    Value: !Sub |
+      Bucket created: ${VillaSDKCacheBucket}
+      
+      To use with Villa SDK:
+      from villa_ecommerce_sdk import VillaClient
+      client = VillaClient(s3_bucket="${VillaSDKCacheBucket}")
+      
+      To attach the policy to an IAM user/role:
+      aws iam attach-user-policy --user-name YOUR_USER --policy-arn ${VillaSDKCachePolicy}
+      OR
+      aws iam attach-role-policy --role-name YOUR_ROLE --policy-arn ${VillaSDKCachePolicy}
+
