@@ -120,7 +120,7 @@ jobs:
         run: |
           sam deploy \
             --stack-name ${{ env.STACK_NAME }} \
-            --capabilities CAPABILITY_IAM \
+            --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
             --region ${{ env.AWS_REGION }} \
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
