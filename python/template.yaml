@@ -86,7 +86,7 @@ Resources:
               - s3:ListBucket
               - s3:HeadObject
             Resource:
-              - !Sub '${VillaSDKCacheBucket}/*'
+              - !Sub '${VillaSDKCacheBucket.Arn}/*'
               - !GetAtt VillaSDKCacheBucket.Arn
 
   # Bucket Policy (allows IAM users/roles in the account)
@@ -109,7 +109,7 @@ Resources:
               - s3:ListBucket
               - s3:HeadObject
             Resource:
-              - !Sub '${VillaSDKCacheBucket}/*'
+              - !Sub '${VillaSDKCacheBucket.Arn}/*'
               - !GetAtt VillaSDKCacheBucket.Arn
             # Note: Actual access control is via IAM policies attached to users/roles
             # This bucket policy allows any IAM principal in the account,
