@@ -98,7 +98,14 @@ Resources:
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
-          - Sid: AllowSDKCacheAccess
+          - Sid: AllowBucketList
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action:
+              - s3:ListBucket
+            Resource: !GetAtt VillaSDKCacheBucket.Arn
+          - Sid: AllowObjectAccess
             Effect: Allow
             Principal:
               AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
@@ -106,11 +113,8 @@ Resources:
               - s3:GetObject
               - s3:PutObject
               - s3:DeleteObject
-              - s3:ListBucket
               - s3:HeadObject
-            Resource:
-              - !Sub '${VillaSDKCacheBucket.Arn}/*'
-              - !GetAtt VillaSDKCacheBucket.Arn
+            Resource: !Sub '${VillaSDKCacheBucket.Arn}/*'
             # Note: Actual access control is via IAM policies attached to users/roles
             # This bucket policy allows any IAM principal in the account,
             # but they still need the VillaSDKCachePolicy attached to access
