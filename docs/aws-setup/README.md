@@ -4,6 +4,20 @@ This directory contains setup scripts and documentation for configuring GitHub A
 
 ## Quick Start
 
+### Option 1: Use Existing Role (Recommended if you already have one)
+
+```bash
+cd docs/aws-setup
+./use-existing-role.sh arn:aws:iam::ACCOUNT_ID:role/ROLE_NAME YOUR_GITHUB_USERNAME VillaEcommerceSdk
+```
+
+**Example:**
+```bash
+./use-existing-role.sh arn:aws:iam::394922924679:role/deploy-github-action-wallet2 thanakijwanavit VillaEcommerceSdk
+```
+
+### Option 2: Create New Role
+
 ```bash
 cd docs/aws-setup
 ./setup-aws-oidc.sh YOUR_GITHUB_USERNAME VillaEcommerceSdk
@@ -16,7 +30,8 @@ Then add the Role ARN to GitHub Secrets:
 ## Files
 
 - **SETUP.md** - Main setup guide (OIDC, no access keys)
-- **setup-aws-oidc.sh** - Automated OIDC setup script
+- **use-existing-role.sh** - Configure existing IAM role for GitHub Actions ⭐
+- **setup-aws-oidc.sh** - Create new IAM role and setup OIDC
 - **fix-oidc-trust.sh** - Quick fix for OIDC trust policy issues
 - **TROUBLESHOOTING.md** - Troubleshooting guide for OIDC errors
 - **AWS_SETUP.md** - Detailed OIDC setup documentation
