@@ -89,35 +89,8 @@ Resources:
               - !Sub '${VillaSDKCacheBucket.Arn}/*'
               - !GetAtt VillaSDKCacheBucket.Arn
 
-  # Bucket Policy (allows IAM users/roles in the account)
-  # Access is controlled via IAM policies attached to users/roles
-  VillaSDKCacheBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref VillaSDKCacheBucket
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: AllowBucketList
-            Effect: Allow
-            Principal:
-              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
-            Action:
-              - s3:ListBucket
-            Resource: !GetAtt VillaSDKCacheBucket.Arn
-          - Sid: AllowObjectAccess
-            Effect: Allow
-            Principal:
-              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
-            Action:
-              - s3:GetObject
-              - s3:PutObject
-              - s3:DeleteObject
-              - s3:HeadObject
-            Resource: !Sub '${VillaSDKCacheBucket.Arn}/*'
-            # Note: Actual access control is via IAM policies attached to users/roles
-            # This bucket policy allows any IAM principal in the account,
-            # but they still need the VillaSDKCachePolicy attached to access
+  # Note: Access control is handled via IAM policies (VillaSDKCachePolicy)
+  # No bucket policy needed - IAM policies provide sufficient access control
 
 Conditions:
   VersioningEnabled: !Equals [!Ref EnableVersioning, 'true']
