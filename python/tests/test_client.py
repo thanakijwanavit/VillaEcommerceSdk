@@ -11,17 +11,19 @@ class TestVillaClient:
     
     @patch('villa_ecommerce_sdk.products.ProductsService')
     @patch('villa_ecommerce_sdk.inventory.InventoryService')
+    @patch('villa_ecommerce_sdk.payments.PaymentService')
     @patch('villa_ecommerce_sdk.cache.S3Cache')
-    def test_init(self, mock_cache, mock_inventory, mock_products):
+    def test_init(self, mock_cache, mock_payments, mock_inventory, mock_products):
         """Test VillaClient initialization."""
         client = VillaClient(s3_bucket="test-bucket")
         assert client.base_url == "https://shop.villamarket.com"
         assert client.s3_bucket == "test-bucket"
     
-    @patch('villa_ecommerce_sdk.products.ProductsService')
-    @patch('villa_ecommerce_sdk.inventory.InventoryService')
     @patch('villa_ecommerce_sdk.cache.S3Cache')
-    def test_get_product_list(self, mock_cache, mock_inventory, mock_products):
+    @patch('villa_ecommerce_sdk.payments.PaymentService')
+    @patch('villa_ecommerce_sdk.inventory.InventoryService')
+    @patch('villa_ecommerce_sdk.products.ProductsService')
+    def test_get_product_list(self, mock_products, mock_inventory, mock_payments, mock_cache):
         """Test get_product_list method."""
         mock_products_instance = Mock()
         mock_products_instance.get_product_list.return_value = pd.DataFrame({"id": [1, 2]})
@@ -33,10 +35,11 @@ class TestVillaClient:
         assert isinstance(result, pd.DataFrame)
         mock_products_instance.get_product_list.assert_called_once_with(branch=1000)
     
-    @patch('villa_ecommerce_sdk.products.ProductsService')
-    @patch('villa_ecommerce_sdk.inventory.InventoryService')
     @patch('villa_ecommerce_sdk.cache.S3Cache')
-    def test_get_inventory(self, mock_cache, mock_inventory, mock_products):
+    @patch('villa_ecommerce_sdk.payments.PaymentService')
+    @patch('villa_ecommerce_sdk.inventory.InventoryService')
+    @patch('villa_ecommerce_sdk.products.ProductsService')
+    def test_get_inventory(self, mock_products, mock_inventory, mock_payments, mock_cache):
         """Test get_inventory method."""
         mock_inventory_instance = Mock()
         mock_inventory_instance.get_inventory.return_value = pd.DataFrame({"id": [1, 2]})
@@ -48,10 +51,11 @@ class TestVillaClient:
         assert isinstance(result, pd.DataFrame)
         mock_inventory_instance.get_inventory.assert_called_once_with(branch=1000)
     
-    @patch('villa_ecommerce_sdk.products.ProductsService')
-    @patch('villa_ecommerce_sdk.inventory.InventoryService')
     @patch('villa_ecommerce_sdk.cache.S3Cache')
-    def test_filter_dataframe(self, mock_cache, mock_inventory, mock_products):
+    @patch('villa_ecommerce_sdk.payments.PaymentService')
+    @patch('villa_ecommerce_sdk.inventory.InventoryService')
+    @patch('villa_ecommerce_sdk.products.ProductsService')
+    def test_filter_dataframe(self, mock_products, mock_inventory, mock_payments, mock_cache):
         """Test filter_dataframe method."""
         client = VillaClient(s3_bucket="test-bucket")
         
@@ -74,10 +78,11 @@ class TestVillaClient:
         filtered = client.filter_dataframe(df, {"category": ["electronics", "food"]})
         assert len(filtered) == 3
     
-    @patch('villa_ecommerce_sdk.products.ProductsService')
-    @patch('villa_ecommerce_sdk.inventory.InventoryService')
     @patch('villa_ecommerce_sdk.cache.S3Cache')
-    def test_get_products_with_inventory(self, mock_cache, mock_inventory, mock_products):
+    @patch('villa_ecommerce_sdk.payments.PaymentService')
+    @patch('villa_ecommerce_sdk.inventory.InventoryService')
+    @patch('villa_ecommerce_sdk.products.ProductsService')
+    def test_get_products_with_inventory(self, mock_products, mock_inventory, mock_payments, mock_cache):
         """Test get_products_with_inventory method."""
         mock_products_instance = Mock()
         mock_products_instance.get_product_list.return_value = pd.DataFrame({
@@ -100,10 +105,11 @@ class TestVillaClient:
         mock_products_instance.get_product_list.assert_called_once_with(branch=1000)
         mock_inventory_instance.get_inventory.assert_called_once_with(branch=1000)
     
-    @patch('villa_ecommerce_sdk.products.ProductsService')
-    @patch('villa_ecommerce_sdk.inventory.InventoryService')
     @patch('villa_ecommerce_sdk.cache.S3Cache')
-    def test_get_products_with_inventory_with_filters(self, mock_cache, mock_inventory, mock_products):
+    @patch('villa_ecommerce_sdk.payments.PaymentService')
+    @patch('villa_ecommerce_sdk.inventory.InventoryService')
+    @patch('villa_ecommerce_sdk.products.ProductsService')
+    def test_get_products_with_inventory_with_filters(self, mock_products, mock_inventory, mock_payments, mock_cache):
         """Test get_products_with_inventory with filters."""
         mock_products_instance = Mock()
         mock_products_instance.get_product_list.return_value = pd.DataFrame({
@@ -127,10 +133,11 @@ class TestVillaClient:
         assert isinstance(result, pd.DataFrame)
         assert len(result) == 2  # Filtered to category A
     
-    @patch('villa_ecommerce_sdk.products.ProductsService')
-    @patch('villa_ecommerce_sdk.inventory.InventoryService')
     @patch('villa_ecommerce_sdk.cache.S3Cache')
-    def test_filter_dataframe_column_not_exists(self, mock_cache, mock_inventory, mock_products):
+    @patch('villa_ecommerce_sdk.payments.PaymentService')
+    @patch('villa_ecommerce_sdk.inventory.InventoryService')
+    @patch('villa_ecommerce_sdk.products.ProductsService')
+    def test_filter_dataframe_column_not_exists(self, mock_products, mock_inventory, mock_payments, mock_cache):
         """Test filter_dataframe with column that doesn't exist."""
         client = VillaClient(s3_bucket="test-bucket")
         
@@ -143,10 +150,11 @@ class TestVillaClient:
         filtered = client.filter_dataframe(df, {"nonexistent": "value"})
         assert len(filtered) == 3  # Should return all rows
     
-    @patch('villa_ecommerce_sdk.products.ProductsService')
-    @patch('villa_ecommerce_sdk.inventory.InventoryService')
     @patch('villa_ecommerce_sdk.cache.S3Cache')
-    def test_filter_dataframe_comparison_operators(self, mock_cache, mock_inventory, mock_products):
+    @patch('villa_ecommerce_sdk.payments.PaymentService')
+    @patch('villa_ecommerce_sdk.inventory.InventoryService')
+    @patch('villa_ecommerce_sdk.products.ProductsService')
+    def test_filter_dataframe_comparison_operators(self, mock_products, mock_inventory, mock_payments, mock_cache):
         """Test filter_dataframe with all comparison operators."""
         client = VillaClient(s3_bucket="test-bucket")
         
@@ -171,10 +179,11 @@ class TestVillaClient:
         filtered = client.filter_dataframe(df, {"price": {"lt": 200}})
         assert len(filtered) == 2
     
-    @patch('villa_ecommerce_sdk.products.ProductsService')
-    @patch('villa_ecommerce_sdk.inventory.InventoryService')
     @patch('villa_ecommerce_sdk.cache.S3Cache')
-    def test_merge_dataframes_no_common_key(self, mock_cache, mock_inventory, mock_products):
+    @patch('villa_ecommerce_sdk.payments.PaymentService')
+    @patch('villa_ecommerce_sdk.inventory.InventoryService')
+    @patch('villa_ecommerce_sdk.products.ProductsService')
+    def test_merge_dataframes_no_common_key(self, mock_products, mock_inventory, mock_payments, mock_cache):
         """Test _merge_dataframes when no common key exists."""
         client = VillaClient(s3_bucket="test-bucket")
         
@@ -192,10 +201,11 @@ class TestVillaClient:
         merged = client._merge_dataframes(products_df, inventory_df)
         assert isinstance(merged, pd.DataFrame)
     
-    @patch('villa_ecommerce_sdk.products.ProductsService')
-    @patch('villa_ecommerce_sdk.inventory.InventoryService')
     @patch('villa_ecommerce_sdk.cache.S3Cache')
-    def test_merge_dataframes_same_length_fallback(self, mock_cache, mock_inventory, mock_products):
+    @patch('villa_ecommerce_sdk.payments.PaymentService')
+    @patch('villa_ecommerce_sdk.inventory.InventoryService')
+    @patch('villa_ecommerce_sdk.products.ProductsService')
+    def test_merge_dataframes_same_length_fallback(self, mock_products, mock_inventory, mock_payments, mock_cache):
         """Test _merge_dataframes fallback when same length but no common key."""
         client = VillaClient(s3_bucket="test-bucket")
         
@@ -214,10 +224,11 @@ class TestVillaClient:
         assert isinstance(merged, pd.DataFrame)
         assert len(merged) == 2
     
-    @patch('villa_ecommerce_sdk.products.ProductsService')
-    @patch('villa_ecommerce_sdk.inventory.InventoryService')
     @patch('villa_ecommerce_sdk.cache.S3Cache')
-    def test_merge_dataframes_different_length_fallback(self, mock_cache, mock_inventory, mock_products):
+    @patch('villa_ecommerce_sdk.payments.PaymentService')
+    @patch('villa_ecommerce_sdk.inventory.InventoryService')
+    @patch('villa_ecommerce_sdk.products.ProductsService')
+    def test_merge_dataframes_different_length_fallback(self, mock_products, mock_inventory, mock_payments, mock_cache):
         """Test _merge_dataframes fallback when different length."""
         client = VillaClient(s3_bucket="test-bucket")
         

@@ -7,14 +7,17 @@ import pandas as pd
 class VillaClient:
     """Main client for interacting with Villa Ecommerce API."""
     
-    def __init__(self, s3_bucket: str, base_url: str = "https://shop.villamarket.com"):
+    def __init__(self, s3_bucket: Optional[str] = None, base_url: str = "https://shop.villamarket.com"):
         """
         Initialize Villa API client.
         
         Args:
-            s3_bucket: S3 bucket name for caching
+            s3_bucket: S3 bucket name for caching (default: villa-ecommerce-sdk-cache)
             base_url: Base URL for Villa API (default: https://shop.villamarket.com)
         """
+        # Use default bucket name from template.yaml if not provided
+        if s3_bucket is None:
+            s3_bucket = "villa-ecommerce-sdk-cache"
         self.base_url = base_url.rstrip('/')
         self.s3_bucket = s3_bucket
         

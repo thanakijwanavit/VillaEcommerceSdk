@@ -1,6 +1,6 @@
 # Villa Ecommerce SDK for Python
 
-A Python SDK for fetching product lists and inventory data from Villa Market APIs with S3-based caching.
+A Python SDK for connecting third-party applications (websites, mobile apps, etc.) to the Villa Market ecommerce engine. Provides access to product catalogs, inventory data, and payment processing with S3-based caching.
 
 ## Installation
 
@@ -13,7 +13,10 @@ pip install villa-ecommerce-sdk
 ```python
 from villa_ecommerce_sdk import VillaClient
 
-# Initialize client with S3 bucket for caching
+# Initialize client (uses default bucket: villa-ecommerce-sdk-cache)
+client = VillaClient()
+
+# Or specify a custom bucket
 client = VillaClient(s3_bucket="your-s3-bucket-name")
 
 # Get product list for branch 1000 (default)
@@ -30,16 +33,27 @@ filtered_data = client.get_products_with_inventory(
     filters={"category": "electronics", "price": {"gt": 100}}
 )
 print(filtered_data.head())
+
+# Create a payment
+payment = client.create_payment(
+    order_id="ORDER-123",
+    amount=1500.00,
+    currency="THB",
+    payment_method="credit_card"
+)
+print(f"Payment created: {payment['paymentId']}")
 ```
 
 ## Features
 
 - **Product List Fetching**: Retrieve product data from Villa Market API
 - **Inventory Management**: Get inventory data for specific branches
+- **Payment Processing**: Create payments, process refunds, and manage payment history
 - **Data Merging**: Automatically merge product and inventory data
 - **Advanced Filtering**: Filter data using various criteria (exact match, comparison operators, lists)
 - **S3 Caching**: Automatic caching of API responses in S3 for improved performance
 - **Pandas Integration**: All data returned as pandas DataFrames for easy manipulation
+- **Extensible Architecture**: Base class for creating custom services
 
 ## Requirements
 
@@ -94,11 +108,15 @@ Main client class for interacting with Villa Market APIs.
 Initialize the Villa API client.
 
 **Parameters:**
-- `s3_bucket` (str): Name of the S3 bucket to use for caching
+- `s3_bucket` (str, optional): Name of the S3 bucket to use for caching. Defaults to `villa-ecommerce-sdk-cache`
 - `base_url` (str, optional): Base URL for Villa API. Defaults to `https://shop.villamarket.com`
 
 **Example:**
 ```python
+# Use default bucket
+client = VillaClient()
+
+# Or specify custom bucket
 client = VillaClient(s3_bucket="my-cache-bucket")
 ```
 
@@ -381,6 +399,12 @@ Contributions are welcome! Please:
 ## License
 
 MIT License
+
+## Documentation
+
+- **[Complete Manual](MANUAL.md)**: Comprehensive guide with examples and best practices
+- **[Quick Start Guide](QUICK_START_GUIDE.md)**: Get started quickly with common use cases
+- **[API Reference](docs/api/python.md)**: Detailed API documentation
 
 ## Support
 
