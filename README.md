@@ -1,79 +1,127 @@
-# Villa Ecommerce SDK (Swift)
+# Villa Ecommerce SDK
 
-A Swift SDK and API client for obtaining data from Villa Ecommerce. This SDK provides tools for making authenticated requests to the Villa Ecommerce API with support for multiple authentication methods.
-
-> **Note**: SDKs are also available in [Python](#other-language-sdks) and [JavaScript](#other-language-sdks). This repository contains the Swift implementation.
+Multi-language SDKs and API clients for interacting with Villa Ecommerce APIs. This repository provides SDK implementations in Swift, Python, and JavaScript/TypeScript.
 
 ## Overview
 
-The Villa Ecommerce SDK is a Swift package that simplifies interaction with the Villa Ecommerce API. It handles authentication, request signing, and response parsing, making it easy to integrate Villa Ecommerce data into your iOS or macOS applications.
+The Villa Ecommerce SDK provides tools for making authenticated requests to the Villa Ecommerce API with support for multiple authentication methods, caching, and data manipulation.
 
-## Features
+## Available SDKs
 
-- **Multiple Authentication Methods**: Support for API Key, AWS Cognito, and AWS Signature authentication
-- **AWS Request Signing**: Built-in AWS Signature V4 signing for secure API requests
-- **Type-Safe Requests**: Decodable response handling with Swift's Codable protocol
-- **Async/Await Support**: Modern Swift concurrency support (iOS 15+)
-- **Alamofire Integration**: Built on top of Alamofire for robust networking
+### Swift SDK
 
-## Requirements
+A Swift package for iOS and macOS applications.
 
-- iOS 14.0+ / macOS 10.13+
-- Swift 5.5+
-- Xcode 13.0+
+**Features:**
+- Multiple authentication methods (API Key, AWS Cognito, AWS Signature)
+- AWS Request Signing with Signature V4
+- Type-safe requests with Codable
+- Async/Await support (iOS 15+)
+- Alamofire integration
 
-## Installation
-
-### Swift Package Manager
-
-Add the following to your `Package.swift` file:
-
+**Installation:**
 ```swift
 dependencies: [
     .package(url: "https://github.com/your-org/VillaEcommerceSdk.git", from: "1.0.0")
 ]
 ```
 
-Or add it through Xcode:
-1. File → Add Packages...
-2. Enter the repository URL
-3. Select the version you want to use
+**Documentation:** See [Swift SDK README](Sources/VillaEcommerceSdk/README.md) or the main [README](README.md) above.
 
-## Usage
+### Python SDK
 
-### Basic Setup
+A Python package for fetching product lists and inventory data with S3-based caching.
+
+**Features:**
+- Product list fetching from Villa Market APIs
+- Inventory data retrieval
+- S3-based caching for API responses
+- Pandas DataFrame support
+- Data merging and filtering capabilities
+
+**Installation:**
+```bash
+pip install villa-ecommerce-sdk
+```
+
+**Quick Start:**
+```python
+from villa_ecommerce_sdk import VillaClient
+
+client = VillaClient(s3_bucket="villa-ecommerce-sdk-cache")
+products_df = client.get_product_list(branch=1000)
+inventory_df = client.get_inventory(branch=1000)
+merged_df = client.get_products_with_inventory(branch=1000)
+```
+
+**Documentation:** See [Python SDK README](python/README.md)
+
+**Infrastructure:** See [AWS Setup Guide](docs/aws-setup/README.md) for deploying the S3 cache bucket.
+
+### JavaScript/TypeScript SDK
+
+Coming soon - JavaScript/TypeScript SDK implementation.
+
+## Repository Structure
+
+```
+VillaEcommerceSdk/
+├── Sources/                    # Swift SDK source code
+│   └── VillaEcommerceSdk/
+├── python/                     # Python SDK
+│   ├── src/
+│   │   └── villa_ecommerce_sdk/
+│   ├── tests/
+│   ├── template.yaml          # SAM template for S3 bucket
+│   └── README.md
+├── javascript/                 # JavaScript/TypeScript SDK (coming soon)
+├── docs/                       # Documentation
+│   └── aws-setup/             # AWS infrastructure setup guides
+├── .github/
+│   └── workflows/             # CI/CD workflows
+└── README.md                   # This file
+```
+
+## Features
+
+### Common Features Across SDKs
+
+- **Multiple Authentication Methods**: Support for API Key, AWS Cognito, and AWS Signature authentication
+- **AWS Integration**: Built-in AWS services integration
+- **Type Safety**: Strong typing and validation
+- **Error Handling**: Comprehensive error handling and retry logic
+
+### Python-Specific Features
+
+- **S3 Caching**: Automatic caching of API responses to S3
+- **DataFrame Support**: All data returned as pandas DataFrames
+- **Data Manipulation**: Built-in merging and filtering capabilities
+
+### Swift-Specific Features
+
+- **Async/Await**: Modern Swift concurrency support
+- **Codable Integration**: Type-safe request/response handling
+- **Alamofire**: Built on Alamofire for robust networking
+
+## Requirements
+
+### Swift SDK
+- iOS 14.0+ / macOS 10.13+
+- Swift 5.5+
+- Xcode 13.0+
+
+### Python SDK
+- Python 3.8 or higher
+- AWS credentials configured (for S3 caching)
+- An S3 bucket for caching API responses
+
+## Quick Start Examples
+
+### Swift
 
 ```swift
 import VillaEcommerceSdk
 
-// Initialize with default base URL (https://villa.kitchen/)
-let api = VillaApi()
-
-// Or specify a custom base URL
-let api = VillaApi(baseUrl: "https://your-custom-url.com/")
-```
-
-### Authentication Methods
-
-The SDK supports three authentication methods:
-
-#### 1. No Authentication
-
-```swift
-let api = VillaApi()
-api.getRequest(
-    of: YourResponseType.self,
-    authorization: .none,
-    url: "https://villa.kitchen/api/endpoint",
-    functionName: "getData"
-) { result in
-    // Handle result
-}
-```
-
-#### 2. API Key Authentication
-
-```swift
 let api = VillaApi()
 api.getRequest(
     of: YourResponseType.self,
@@ -85,157 +133,60 @@ api.getRequest(
 }
 ```
 
-#### 3. AWS Cognito Authentication
+### Python
 
-```swift
-let api = VillaApi()
-api.getRequest(
-    of: YourResponseType.self,
-    authorization: .cognito(cognitoKey: "your-cognito-token"),
-    url: "https://villa.kitchen/api/endpoint",
-    functionName: "getData"
-) { result in
-    // Handle result
-}
-```
+```python
+from villa_ecommerce_sdk import VillaClient
 
-#### 4. AWS Signature Authentication
-
-```swift
-import AWSSigner
-import NIOHTTP1
-
-let awsSignature = AwsSignature()
-let headers = NIOHTTP1.HTTPHeaders([("Content-Type", "application/json")])
-
-let signedHeaders = awsSignature.getAwsHeader(
-    key: "your-access-key",
-    secret: "your-secret-key",
-    url: "https://villa.kitchen/api/endpoint",
-    method: .get,
-    headers: headers,
-    body: nil
+client = VillaClient(s3_bucket="my-bucket")
+products_df = client.get_product_list(branch=1000)
+merged_df = client.get_products_with_inventory(
+    branch=1000,
+    filters={"category": "electronics"}
 )
-
-// Use signedHeaders with your Alamofire request
 ```
 
-### API Key Helper
+## Infrastructure Setup
 
-The `ApiKey` class provides convenient methods for retrieving API keys:
+For Python SDK users, you'll need an S3 bucket for caching. See [AWS Setup Guide](docs/aws-setup/README.md) for:
 
-#### Using Completion Handler
-
-```swift
-let apiKey = ApiKey()
-apiKey.getMockupKey(
-    path: "auth/check/cognitotest1",
-    authorization: .cognito(cognitoKey: "your-token")
-) { key in
-    if let key = key {
-        print("Retrieved API key: \(key)")
-    }
-}
-```
-
-#### Using Async/Await (iOS 15+)
-
-```swift
-@available(iOS 15.0, *)
-func fetchApiKey() async {
-    let apiKey = ApiKey()
-    if let key = await apiKey.getMockupKey(
-        authorization: .cognito(cognitoKey: "your-token")
-    ) {
-        print("Retrieved API key: \(key)")
-    }
-}
-```
-
-### Custom Request Types
-
-Define your response models using Swift's `Codable` protocol:
-
-```swift
-struct ProductResponse: Codable {
-    let id: String
-    let name: String
-    let price: Double
-}
-
-let api = VillaApi()
-api.getRequest(
-    of: ProductResponse.self,
-    authorization: .apiKey(apikey: "your-key"),
-    url: "https://villa.kitchen/api/products/123",
-    functionName: "getProduct"
-) { product in
-    if let product = product {
-        print("Product: \(product.name)")
-    }
-}
-```
-
-## API Reference
-
-### VillaApi
-
-Main API client class for making requests to Villa Ecommerce.
-
-#### Methods
-
-- `init(baseUrl: String)` - Initialize with a custom base URL (defaults to `https://villa.kitchen/`)
-- `getRequest<T: Decodable>(of:authorization:url:functionName:callback:)` - Make a GET request with type-safe response handling
-
-#### Authorization Enum
-
-```swift
-enum Authorization {
-    case none
-    case apiKey(apikey: String)
-    case cognito(cognitoKey: String)
-    case aws(key: String, secret: String)
-}
-```
-
-### ApiKey
-
-Helper class for API key management.
-
-#### Methods
-
-- `getMockupKey(path:authorization:callback:)` - Retrieve an API key using completion handler
-- `getMockupKey(authorization:) async -> String?` - Retrieve an API key using async/await (iOS 15+)
-
-### AwsSignature
-
-Utility class for AWS Signature V4 signing.
-
-#### Methods
-
-- `getAwsHeader(key:secret:url:method:headers:body:) -> HTTPHeaders` - Generate AWS-signed headers
-- `staticGetAwsHeader(key:secret:url:method:headers:body:) -> HTTPHeaders` - Static convenience method
-
-## Dependencies
-
-- [Alamofire](https://github.com/Alamofire/Alamofire) - HTTP networking library
-- [aws-signer-v4](https://github.com/adam-fowler/aws-signer-v4) - AWS Signature V4 signing
-- [Yams](https://github.com/jpsim/Yams) - YAML parsing library
-
-## Other Language SDKs
-
-This SDK is also available in other languages:
-- **Python**: For Python usage, please refer to the Python SDK documentation
-- **JavaScript**: For JavaScript/TypeScript usage, please refer to the JavaScript SDK documentation
+- Automated setup scripts
+- CloudFormation/SAM templates
+- GitHub Actions deployment workflows
 
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+### Development Setup
+
+1. **Swift SDK**: Open in Xcode or use Swift Package Manager
+2. **Python SDK**: 
+   ```bash
+   cd python
+   pip install -e .
+   pytest tests/
+   ```
+3. **JavaScript SDK**: Coming soon
+
+## CI/CD
+
+This repository includes GitHub Actions workflows for:
+- **Deployment**: Deploy S3 cache bucket infrastructure
+- **Publishing**: Publish Python package to PyPI
+
+See `.github/workflows/` for workflow definitions.
+
 ## License
 
-[Add your license information here]
+MIT License - see [LICENSE](python/LICENSE) file for details.
 
 ## Support
 
 For issues, questions, or feature requests, please open an issue on the GitHub repository.
+
+## Links
+
+- [Python SDK Documentation](python/README.md)
+- [AWS Infrastructure Setup](docs/aws-setup/README.md)
+- [Python SDK PyPI Package](https://pypi.org/project/villa-ecommerce-sdk/)
