@@ -122,6 +122,7 @@ jobs:
             --stack-name ${{ env.STACK_NAME }} \
             --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
             --region ${{ env.AWS_REGION }} \
+            --debug \
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
             --force-upload \
