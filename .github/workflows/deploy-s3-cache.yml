@@ -124,6 +124,7 @@ jobs:
             --region ${{ env.AWS_REGION }} \
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
+            --force-upload \
             --parameter-overrides \
               BucketName=${{ github.event.inputs.bucket_name || env.BUCKET_NAME }} \
               EnableVersioning=${{ github.event.inputs.enable_versioning || 'true' }} \

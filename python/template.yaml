@@ -60,12 +60,6 @@ Resources:
                 ExpirationInDays: !Ref CacheRetentionDays
                 NoncurrentVersionExpirationInDays: !Ref CacheRetentionDays
           - !Ref AWS::NoValue
-      NotificationConfiguration:
-        # Optional: Add SNS/SQS notifications if needed
-        # CloudWatchConfigurations:
-        #   - Event: s3:ObjectCreated:*
-        #     CloudWatchConfiguration:
-        #       LogGroupName: !Ref CacheLogGroup
       Tags:
         - Key: Name
           Value: VillaEcommerceSDKCache
