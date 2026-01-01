@@ -32,8 +32,7 @@ if [ -z "$OIDC_PROVIDER_EXISTS" ]; then
     aws iam create-open-id-connect-provider \
         --url https://token.actions.githubusercontent.com \
         --client-id-list sts.amazonaws.com \
-        --thumbprint-list 6938fd4d98bab03faadb97b34396831e3780aea1 \
-        --region us-east-1 || echo "⚠️  OIDC provider may already exist or thumbprint needs update"
+        --thumbprint-list 6938fd4d98bab03faadb97b34396831e3780aea1 || echo "⚠️  OIDC provider may already exist or thumbprint needs update"
 else
     echo "✅ OIDC provider already exists"
 fi

@@ -10,7 +10,7 @@ on:
       region:
         description: 'AWS region'
         required: true
-        default: 'us-east-1'
+        default: 'ap-southeast-1'
       bucket_name:
         description: 'S3 bucket name'
         required: true
@@ -49,7 +49,7 @@ on:
       - '.github/workflows/deploy-s3-cache.yml'
 
 env:
-  AWS_REGION: us-east-1
+  AWS_REGION: ap-southeast-1
   STACK_NAME: villa-sdk-cache
   BUCKET_NAME: villa-ecommerce-sdk-cache
 
