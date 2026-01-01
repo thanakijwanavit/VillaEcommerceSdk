@@ -1,0 +1,163 @@
+name: Deploy S3 Cache Bucket
+
+on:
+  workflow_dispatch:
+    inputs:
+      stack_name:
+        description: 'CloudFormation stack name'
+        required: true
+        default: 'villa-sdk-cache'
+      region:
+        description: 'AWS region'
+        required: true
+        default: 'us-east-1'
+      bucket_name:
+        description: 'S3 bucket name'
+        required: true
+        default: 'villa-ecommerce-sdk-cache'
+      enable_versioning:
+        description: 'Enable versioning'
+        required: true
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+      enable_lifecycle:
+        description: 'Enable lifecycle rules'
+        required: true
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+      cache_retention_days:
+        description: 'Cache retention days'
+        required: true
+        default: '30'
+  push:
+    branches:
+      - main
+    paths:
+      - 'python/template.yaml'
+      - '.github/workflows/deploy-s3-cache.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'python/template.yaml'
+      - '.github/workflows/deploy-s3-cache.yml'
+
+env:
+  AWS_REGION: us-east-1
+  STACK_NAME: villa-sdk-cache
+  BUCKET_NAME: villa-ecommerce-sdk-cache
+
+jobs:
+  validate:
+    name: Validate SAM Template
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install SAM CLI
+        run: |
+          pip install aws-sam-cli
+
+      - name: Validate template
+        working-directory: python
+        run: |
+          sam validate --template template.yaml --lint
+
+  deploy:
+    name: Deploy S3 Cache Bucket
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    environment:
+      name: production
+      url: https://console.aws.amazon.com/cloudformation/home
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ github.event.inputs.region || env.AWS_REGION }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install SAM CLI
+        run: |
+          pip install aws-sam-cli
+
+      - name: SAM Build
+        working-directory: python
+        run: |
+          sam build --template template.yaml
+
+      - name: SAM Deploy
+        working-directory: python
+        env:
+          STACK_NAME: ${{ github.event.inputs.stack_name || env.STACK_NAME }}
+          AWS_REGION: ${{ github.event.inputs.region || env.AWS_REGION }}
+        run: |
+          sam deploy \
+            --stack-name ${{ env.STACK_NAME }} \
+            --capabilities CAPABILITY_IAM \
+            --region ${{ env.AWS_REGION }} \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --parameter-overrides \
+              BucketName=${{ github.event.inputs.bucket_name || env.BUCKET_NAME }} \
+              EnableVersioning=${{ github.event.inputs.enable_versioning || 'true' }} \
+              EnableLifecycleRules=${{ github.event.inputs.enable_lifecycle || 'true' }} \
+            --resolve-s3
+
+      - name: Get Stack Outputs
+        working-directory: python
+        run: |
+          echo "## Stack Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Stack Outputs" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          aws cloudformation describe-stacks \
+            --stack-name ${{ env.STACK_NAME }} \
+            --region ${{ env.AWS_REGION }} \
+            --query 'Stacks[0].Outputs' \
+            --output table >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Output Policy ARN
+        working-directory: python
+        run: |
+          POLICY_ARN=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.STACK_NAME }} \
+            --region ${{ env.AWS_REGION }} \
+            --query 'Stacks[0].Outputs[?OutputKey==`PolicyArn`].OutputValue' \
+            --output text)
+          
+          echo "POLICY_ARN=$POLICY_ARN" >> $GITHUB_ENV
+          echo "Policy ARN: $POLICY_ARN"
+          echo ""
+          echo "To attach this policy to an IAM user:"
+          echo "aws iam attach-user-policy --user-name YOUR_USER --policy-arn $POLICY_ARN"
+          echo ""
+          echo "To attach this policy to an IAM role:"
+          echo "aws iam attach-role-policy --role-name YOUR_ROLE --policy-arn $POLICY_ARN"
+
+
