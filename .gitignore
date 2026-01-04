@@ -8,3 +8,4 @@ DerivedData/
 .awsKey
 Sources/VillaEcommerceSdk/awskey
 Tests/VillaEcommerceSdkTests/TestConfig.swift
+dist/

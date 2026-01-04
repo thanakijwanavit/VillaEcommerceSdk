@@ -1,0 +1,43 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - echo "Installing Python dependencies..."
+        - pip install markdown --user
+    build:
+      commands:
+        - echo "Building static documentation site..."
+        - python docs/build_static.py
+  artifacts:
+    baseDirectory: dist
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+      - .venv/**/*
+      - ~/.cache/pip/**/*
+customHeaders:
+  - pattern: '**/*'
+    headers:
+      - key: 'Cache-Control'
+        value: 'public, max-age=3600'
+  - pattern: '**/*.html'
+    headers:
+      - key: 'Cache-Control'
+        value: 'public, max-age=0, must-revalidate'
+redirects:
+  - source: '/python/MANUAL.md'
+    target: '/python/MANUAL.html'
+    type: 301
+  - source: '/guides/python-getting-started.md'
+    target: '/guides/python-getting-started.html'
+    type: 301
+  - source: '/api/python.md'
+    target: '/api/python.html'
+    type: 301
+  - source: '/aws-setup/README.md'
+    target: '/aws-setup/README.html'
+    type: 301
+
