@@ -22,5 +22,6 @@
     },
     "baseUrl": "."
   },
-  "include": ["src", "amplify"]
+  "include": ["src"],
+  "exclude": ["amplify"]
 }
