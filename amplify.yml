@@ -3,10 +3,10 @@ frontend:
   phases:
     preBuild:
       commands:
-        - cd demo && npm install
+        - npm install --prefix demo
     build:
       commands:
-        - cd demo && npm run build
+        - npm run build --prefix demo
   artifacts:
     baseDirectory: demo/dist
     files:
