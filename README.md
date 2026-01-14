@@ -13,6 +13,7 @@ The Villa Ecommerce SDK provides tools for making authenticated requests to the 
 A Swift package for iOS and macOS applications.
 
 **Features:**
+
 - Multiple authentication methods (API Key, AWS Cognito, AWS Signature)
 - AWS Request Signing with Signature V4
 - Type-safe requests with Codable
@@ -20,6 +21,7 @@ A Swift package for iOS and macOS applications.
 - Alamofire integration
 
 **Installation:**
+
 ```swift
 dependencies: [
     .package(url: "https://github.com/your-org/VillaEcommerceSdk.git", from: "1.0.0")
@@ -33,6 +35,7 @@ dependencies: [
 A Python package for fetching product lists and inventory data with S3-based caching.
 
 **Features:**
+
 - Product list fetching from Villa Market APIs
 - Inventory data retrieval
 - S3-based caching for API responses
@@ -40,11 +43,13 @@ A Python package for fetching product lists and inventory data with S3-based cac
 - Data merging and filtering capabilities
 
 **Installation:**
+
 ```bash
 pip install villa-ecommerce-sdk
 ```
 
 **Quick Start:**
+
 ```python
 from villa_ecommerce_sdk import VillaClient
 
@@ -62,6 +67,29 @@ merged_df = client.get_products_with_inventory(branch=1000)
 
 Coming soon - JavaScript/TypeScript SDK implementation.
 
+### Demo Website
+
+An interactive demo showcasing the SDK capabilities, built with React + TypeScript + AWS Amplify Gen 2.
+
+**Features:**
+
+- Product catalog browser
+- Inventory dashboard
+- Interactive API playground
+- SDK documentation
+
+**Live Demo:** Visit the [demo site](https://demo.villa-sdk.example.com) (or deploy your own)
+
+**Run Locally:**
+
+```bash
+cd demo
+npm install
+npm run dev
+```
+
+**Documentation:** See [Demo README](demo/README.md)
+
 ## Repository Structure
 
 ```
@@ -73,6 +101,10 @@ VillaEcommerceSdk/
 │   │   └── villa_ecommerce_sdk/
 │   ├── tests/
 │   ├── template.yaml          # SAM template for S3 bucket
+│   └── README.md
+├── demo/                       # Interactive demo website
+│   ├── amplify/               # Amplify Gen 2 backend
+│   ├── src/                   # React frontend
 │   └── README.md
 ├── javascript/                 # JavaScript/TypeScript SDK (coming soon)
 ├── docs/                       # Documentation
@@ -106,11 +138,13 @@ VillaEcommerceSdk/
 ## Requirements
 
 ### Swift SDK
+
 - iOS 14.0+ / macOS 10.13+
 - Swift 5.5+
 - Xcode 13.0+
 
 ### Python SDK
+
 - Python 3.8 or higher
 - AWS credentials configured (for S3 caching)
 - An S3 bucket for caching API responses
@@ -161,17 +195,25 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ### Development Setup
 
 1. **Swift SDK**: Open in Xcode or use Swift Package Manager
-2. **Python SDK**: 
+2. **Python SDK**:
    ```bash
    cd python
    pip install -e .
    pytest tests/
    ```
-3. **JavaScript SDK**: Coming soon
+3. **Demo Website**:
+   ```bash
+   cd demo
+   npm install
+   npm run dev         # Local development
+   npm run sandbox     # Deploy Amplify sandbox
+   ```
+4. **JavaScript SDK**: Coming soon
 
 ## CI/CD
 
 This repository includes GitHub Actions workflows for:
+
 - **Deployment**: Deploy S3 cache bucket infrastructure
 - **Publishing**: Publish Python package to PyPI
 
@@ -188,5 +230,6 @@ For issues, questions, or feature requests, please open an issue on the GitHub r
 ## Links
 
 - [Python SDK Documentation](python/README.md)
+- [Demo Website](demo/README.md)
 - [AWS Infrastructure Setup](docs/aws-setup/README.md)
 - [Python SDK PyPI Package](https://pypi.org/project/villa-ecommerce-sdk/)

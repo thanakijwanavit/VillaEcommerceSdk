@@ -1,0 +1,124 @@
+# Villa Ecommerce SDK Demo - Cursor Rules
+
+## Project Overview
+
+This is the demo website for the Villa Ecommerce SDK. It showcases the SDK capabilities through an interactive React application deployed on AWS Amplify Gen 2.
+
+## Technology Stack
+
+- **Frontend**: React 18 + TypeScript + Vite
+- **Styling**: Tailwind CSS with custom design system
+- **Animation**: Framer Motion
+- **Backend**: AWS Amplify Gen 2 (Lambda + API Gateway)
+- **Deployment**: AWS Amplify Hosting
+
+## Folder Structure
+
+```
+demo/
+├── amplify/                 # Amplify Gen 2 backend
+│   ├── auth/               # Authentication resources
+│   ├── functions/          # Lambda functions
+│   │   └── villa-api/      # API handler function
+│   └── backend.ts          # Backend definition
+├── src/                    # React frontend
+│   ├── components/         # Reusable components
+│   ├── pages/              # Page components
+│   └── main.tsx            # App entry point
+├── public/                 # Static assets
+└── package.json
+```
+
+## Coding Standards
+
+### TypeScript
+- Use strict TypeScript (`strict: true`)
+- Prefer interfaces over types for object shapes
+- Use explicit return types for functions
+- Avoid `any` - use `unknown` if type is truly unknown
+
+### React
+- Use functional components with hooks
+- Prefer named exports for components
+- Use React Router for navigation
+- Keep components focused and single-responsibility
+
+### Styling
+- Use Tailwind CSS utility classes
+- Follow the custom color palette (villa-*, midnight-*)
+- Use the `glass` and `glass-dark` utilities for frosted glass effects
+- Apply animations via Framer Motion or Tailwind animation classes
+
+### Naming Conventions
+- Components: PascalCase (e.g., `ProductCard.tsx`)
+- Hooks: camelCase with `use` prefix (e.g., `useProducts.ts`)
+- Utilities: camelCase (e.g., `formatPrice.ts`)
+- Constants: UPPER_SNAKE_CASE
+
+## Design System
+
+### Colors
+- Primary: `villa-500` (#e87422) - Orange accent
+- Background: `midnight-950` (#0f1422) - Dark blue-black
+- Text: `midnight-200` (#cbd7ec) - Light gray-blue
+- Success: `green-400`
+- Warning: `yellow-400`
+- Error: `red-400`
+
+### Typography
+- Display font: Clash Display / Outfit
+- Body font: Outfit
+- Mono font: JetBrains Mono
+
+### Components
+- Use `glass` class for transparent containers
+- Rounded corners: `rounded-xl` (12px) or `rounded-2xl` (16px)
+- Shadows: Use `glow` for subtle orange glow effects
+
+## SDK Integration
+
+This demo connects to the parent Villa Ecommerce SDK. When implementing new features:
+
+1. Check the Python SDK (`../python/src/villa_ecommerce_sdk/`) for API patterns
+2. Mirror the SDK's data structures in TypeScript interfaces
+3. Keep demo data consistent with SDK documentation
+
+## Backend (Amplify Gen 2)
+
+### Lambda Functions
+- Use TypeScript for all handlers
+- Include proper error handling and logging
+- Return consistent API response format:
+  ```typescript
+  {
+    success: boolean
+    data?: T
+    error?: string
+    meta?: { total: number, cached: boolean, cacheAge: string }
+  }
+  ```
+
+### Environment Variables
+- `VILLA_API_BASE_URL`: Base URL for Villa API
+- `S3_CACHE_BUCKET`: S3 bucket for caching
+- `CACHE_TTL_SECONDS`: Cache TTL in seconds
+
+## Testing
+
+- Test components with React Testing Library
+- Test API handlers with Lambda event mocks
+- Run `npm run dev` for local development
+- Run `npm run sandbox` for Amplify sandbox deployment
+
+## Deployment
+
+1. **Local Development**: `npm run dev`
+2. **Sandbox Deploy**: `npm run sandbox`
+3. **Production**: Automatic via Amplify Hosting on push to main
+
+## Important Notes
+
+- Keep the demo in sync with SDK changes
+- Update mock data when SDK data models change
+- Follow the parent repo's contributing guidelines
+- Do not commit `amplify_outputs.json` (it's auto-generated)
