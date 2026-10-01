@@ -1,25 +1,31 @@
-# Villa Ecommerce SDK - Complete Manual
+# Villa Ecommerce SDK - Python Manual
+
+Complete guide to using the Villa Ecommerce Python SDK for integrating with Villa Market's ecommerce platform.
 
 ## Table of Contents
 
 1. [Introduction](#introduction)
 2. [Installation](#installation)
 3. [Quick Start](#quick-start)
-4. [Architecture Overview](#architecture-overview)
-5. [Base Class Usage](#base-class-usage)
-6. [Products](#products)
-7. [Inventory](#inventory)
-8. [Payments](#payments)
-9. [Advanced Usage](#advanced-usage)
-10. [Error Handling](#error-handling)
-11. [Best Practices](#best-practices)
-12. [Extending the SDK](#extending-the-sdk)
+4. [Configuration](#configuration)
+5. [Core Concepts](#core-concepts)
+6. [Working with Products](#working-with-products)
+7. [Working with Inventory](#working-with-inventory)
+8. [Payment Processing](#payment-processing)
+9. [Data Filtering](#data-filtering)
+10. [Caching](#caching)
+11. [Advanced Usage](#advanced-usage)
+12. [Error Handling](#error-handling)
+13. [Best Practices](#best-practices)
+14. [Extending the SDK](#extending-the-sdk)
+15. [Troubleshooting](#troubleshooting)
+16. [API Reference](#api-reference)
 
 ---
 
 ## Introduction
 
-The Villa Ecommerce SDK is a Python library that provides a simple and powerful interface for connecting third-party applications (websites, mobile apps, etc.) to the Villa Market ecommerce engine. Villa Market is a supermarket chain that allows third parties to integrate with their platform to access product catalogs, inventory data, and payment processing.
+The Villa Ecommerce SDK for Python provides a simple and powerful interface for connecting third-party applications to Villa Market's ecommerce engine. Villa Market is a supermarket chain that allows third parties to integrate with their platform to access product catalogs, inventory data, and payment processing.
 
 ### Key Features
 
@@ -30,20 +36,27 @@ The Villa Ecommerce SDK is a Python library that provides a simple and powerful 
 - **Pandas Integration**: All data returned as pandas DataFrames for easy manipulation
 - **Extensible Architecture**: Base class for creating custom services
 
+### Requirements
+
+- Python 3.12 or higher
+- AWS account with S3 access
+- AWS credentials configured
+
 ---
 
 ## Installation
 
-### Prerequisites
+### Install from PyPI
 
-- Python 3.8 or higher
-- AWS account with S3 bucket for caching
-- AWS credentials configured (see [AWS Setup](#aws-setup))
+```bash
+pip install villa-ecommerce-sdk
+```
 
 ### Install from Source
 
 ```bash
-cd python
+git clone https://github.com/your-org/VillaEcommerceSdk.git
+cd VillaEcommerceSdk/python
 pip install -e .
 ```
 
@@ -53,32 +66,17 @@ pip install -e .
 pip install -r requirements.txt
 ```
 
-### AWS Setup
-
-The SDK requires AWS credentials for S3 caching. Configure credentials using one of these methods:
-
-1. **AWS Credentials File** (`~/.aws/credentials`):
-```ini
-[default]
-aws_access_key_id = YOUR_ACCESS_KEY
-aws_secret_access_key = YOUR_SECRET_KEY
-```
-
-2. **Environment Variables**:
-```bash
-export AWS_ACCESS_KEY_ID=your_access_key
-export AWS_SECRET_ACCESS_KEY=your_secret_key
-export AWS_DEFAULT_REGION=ap-southeast-1
-```
-
-3. **IAM Role** (when running on EC2/Lambda):
-   - Attach IAM policy with S3 access to your role
+The SDK requires:
+- `pandas >= 1.5.0`
+- `requests >= 2.28.0`
+- `boto3 >= 1.26.0`
+- `python-dateutil >= 2.8.0`
 
 ---
 
 ## Quick Start
 
-### Basic Usage
+### Basic Example
 
 ```python
 from villa_ecommerce_sdk import VillaClient
@@ -86,30 +84,105 @@ from villa_ecommerce_sdk import VillaClient
 # Initialize client (uses default bucket: villa-ecommerce-sdk-cache)
 client = VillaClient()
 
-# Or specify a custom bucket
-client = VillaClient(s3_bucket="your-s3-bucket-name")
-
-# Get products
+# Get products for branch 1000
 products = client.get_product_list(branch=1000)
 print(f"Found {len(products)} products")
+print(products.head())
 
 # Get inventory
 inventory = client.get_inventory(branch=1000)
 print(f"Inventory items: {len(inventory)}")
 
-# Create a payment
-payment = client.create_payment(
-    order_id="ORDER-123",
-    amount=1500.00,
-    currency="THB",
-    payment_method="credit_card"
+# Get merged products and inventory
+merged = client.get_products_with_inventory(branch=1000)
+print(f"Merged data: {len(merged)} rows")
+```
+
+### Custom Configuration
+
+```python
+# Use custom S3 bucket
+client = VillaClient(s3_bucket="my-custom-bucket")
+
+# Use custom API base URL
+client = VillaClient(
+    s3_bucket="villa-ecommerce-sdk-cache",
+    base_url="https://custom-api.example.com"
 )
-print(f"Payment created: {payment['paymentId']}")
 ```
 
 ---
 
-## Architecture Overview
+## Configuration
+
+### AWS Credentials Setup
+
+The SDK uses boto3 for S3 access. Configure your AWS credentials using one of these methods:
+
+#### Option 1: AWS Credentials File
+
+Create `~/.aws/credentials`:
+
+```ini
+[default]
+aws_access_key_id = YOUR_ACCESS_KEY
+aws_secret_access_key = YOUR_SECRET_KEY
+region = ap-southeast-1
+```
+
+#### Option 2: Environment Variables
+
+```bash
+export AWS_ACCESS_KEY_ID=your_access_key
+export AWS_SECRET_ACCESS_KEY=your_secret_key
+export AWS_DEFAULT_REGION=ap-southeast-1
+```
+
+#### Option 3: IAM Role (for EC2/Lambda)
+
+Attach an IAM policy with S3 access to your role:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::villa-ecommerce-sdk-cache/*",
+        "arn:aws:s3:::villa-ecommerce-sdk-cache"
+      ]
+    }
+  ]
+}
+```
+
+### S3 Bucket Setup
+
+The SDK requires an S3 bucket for caching. You can:
+
+1. **Use the default bucket**: `villa-ecommerce-sdk-cache` (if deployed)
+2. **Deploy your own bucket** using the included SAM template:
+
+```bash
+cd python
+sam build
+sam deploy --guided
+```
+
+3. **Use an existing bucket**: Just pass the bucket name when initializing the client
+
+---
+
+## Core Concepts
+
+### Architecture
 
 The SDK follows a service-oriented architecture:
 
@@ -120,7 +193,16 @@ VillaClient (Main Client)
 └── PaymentService (extends BaseService)
 ```
 
-### BaseService
+### Data Flow
+
+1. **Request**: Client method called (e.g., `get_product_list()`)
+2. **Cache Check**: SDK checks S3 cache first
+3. **API Call**: If not cached, makes API request
+4. **Cache Store**: Successful responses are cached
+5. **Data Processing**: Response converted to pandas DataFrame
+6. **Return**: DataFrame returned to caller
+
+### Service Pattern
 
 All services extend `BaseService`, which provides:
 - HTTP request handling (GET, POST, PUT, DELETE)
@@ -128,134 +210,39 @@ All services extend `BaseService`, which provides:
 - Error handling
 - Consistent API patterns
 
-### Services
-
-- **ProductsService**: Product catalog operations
-- **InventoryService**: Inventory management
-- **PaymentService**: Payment processing
-
 ---
 
-## Base Class Usage
-
-### Understanding BaseService
-
-`BaseService` is the foundation for all SDK services. It provides common functionality for making API requests and handling caching.
-
-### Creating a Custom Service
-
-```python
-from villa_ecommerce_sdk.base import BaseService
-from typing import Dict, Any
-import pandas as pd
-
-class CustomService(BaseService):
-    """Custom service example."""
-    
-    def get_service_name(self) -> str:
-        return "CustomService"
-    
-    def get_custom_data(self, branch: int = 1000) -> pd.DataFrame:
-        """Get custom data."""
-        cache_key = f"custom/{branch}.json"
-        data = self._get(
-            endpoint=f"/api/custom/{branch}",
-            cache_key=cache_key
-        )
-        
-        # Process data
-        if isinstance(data, dict) and 'data' in data:
-            return pd.DataFrame(data['data'])
-        return pd.DataFrame(data)
-    
-    def create_custom_item(self, item_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Create custom item."""
-        return self._post(
-            endpoint="/api/custom/create",
-            json_data=item_data
-        )
-```
-
-### Using Custom Service
-
-```python
-from villa_ecommerce_sdk.cache import S3Cache
-from custom_service import CustomService
-
-# Initialize cache (using default bucket)
-cache = S3Cache(bucket_name="villa-ecommerce-sdk-cache")
-
-# Initialize custom service
-custom_service = CustomService(
-    base_url="https://shop.villamarket.com",
-    cache=cache
-)
-
-# Use the service
-data = custom_service.get_custom_data(branch=1000)
-```
-
-### BaseService Methods
-
-#### `_get(endpoint, cache_key=None, params=None)`
-
-Make a GET request with optional caching.
-
-```python
-data = self._get(
-    endpoint="/api/products",
-    cache_key="products.json",
-    params={"branch": 1000}
-)
-```
-
-#### `_post(endpoint, json_data=None, headers=None)`
-
-Make a POST request.
-
-```python
-result = self._post(
-    endpoint="/api/payment/create",
-    json_data={"orderId": "123", "amount": 100}
-)
-```
-
-#### `_put(endpoint, json_data=None, headers=None)`
-
-Make a PUT request.
-
-```python
-result = self._put(
-    endpoint="/api/product/update",
-    json_data={"id": "123", "name": "New Name"}
-)
-```
-
-#### `_delete(endpoint, headers=None)`
-
-Make a DELETE request.
-
-```python
-result = self._delete(
-    endpoint="/api/product/123"
-)
-```
-
----
-
-## Products
+## Working with Products
 
 ### Get Product List
 
 ```python
+from villa_ecommerce_sdk import VillaClient
+
+client = VillaClient()
+
 # Get all products for a branch
 products = client.get_product_list(branch=1000)
 
-# Display product information
-print(products.head())
+# Display basic information
 print(f"Total products: {len(products)}")
-print(f"Categories: {products['category'].unique()}")
+print(f"Columns: {list(products.columns)}")
+print(products.head())
+
+# Get products for different branch
+products_branch_1001 = client.get_product_list(branch=1001)
 ```
+
+### Product Data Structure
+
+The product DataFrame typically contains columns like:
+- `id` or `product_id`: Product identifier
+- `name`: Product name
+- `category`: Product category
+- `price`: Product price
+- `description`: Product description
+- `image_url`: Product image URL
+- Other product-specific fields
 
 ### Filter Products
 
@@ -283,39 +270,80 @@ filtered = client.filter_dataframe(
 )
 ```
 
-### Get Products with Inventory
+### Product Analysis
 
 ```python
-# Get merged products and inventory
-merged = client.get_products_with_inventory(branch=1000)
+import pandas as pd
 
-# With filters
-filtered_merged = client.get_products_with_inventory(
-    branch=1000,
-    filters={
-        "stock": {"gt": 0},
-        "price": {"lt": 100}
-    }
-)
+products = client.get_product_list(branch=1000)
+
+# Basic statistics
+if 'price' in products.columns:
+    print(f"Average price: {products['price'].mean():.2f}")
+    print(f"Max price: {products['price'].max():.2f}")
+    print(f"Min price: {products['price'].min():.2f}")
+
+# Category distribution
+if 'category' in products.columns:
+    category_counts = products['category'].value_counts()
+    print("\nProducts by category:")
+    print(category_counts)
+
+# Export to CSV
+products.to_csv('products.csv', index=False)
+
+# Export to Excel
+products.to_excel('products.xlsx', index=False)
 ```
 
 ---
 
-## Inventory
+## Working with Inventory
 
 ### Get Inventory Data
 
 ```python
+client = VillaClient()
+
 # Get inventory for a branch
 inventory = client.get_inventory(branch=1000)
 
-# Check stock levels
+print(f"Inventory items: {len(inventory)}")
+print(inventory.head())
+```
+
+### Inventory Data Structure
+
+The inventory DataFrame typically contains:
+- `product_id`: Product identifier
+- `stock` or `quantity`: Available stock
+- `branch`: Branch ID
+- `last_updated`: Last update timestamp
+- Other inventory-specific fields
+
+### Check Stock Levels
+
+```python
+# Find low stock items
 low_stock = client.filter_dataframe(
     inventory,
     {"stock": {"lt": 10}}
 )
 
 print(f"Low stock items: {len(low_stock)}")
+print(low_stock[['product_id', 'stock']])
+
+# Find out of stock items
+out_of_stock = client.filter_dataframe(
+    inventory,
+    {"stock": {"eq": 0}}
+)
+
+# Find well-stocked items
+well_stocked = client.filter_dataframe(
+    inventory,
+    {"stock": {"gte": 50}}
+)
 ```
 
 ### Inventory Analysis
@@ -323,10 +351,11 @@ print(f"Low stock items: {len(low_stock)}")
 ```python
 import pandas as pd
 
+# Get products and inventory
+products = client.get_product_list(branch=1000)
 inventory = client.get_inventory(branch=1000)
 
-# Calculate total stock value
-products = client.get_product_list(branch=1000)
+# Merge to calculate total inventory value
 merged = pd.merge(
     products,
     inventory,
@@ -334,19 +363,45 @@ merged = pd.merge(
     right_on='product_id',
     how='inner'
 )
-merged['total_value'] = merged['price'] * merged['stock']
-total_value = merged['total_value'].sum()
 
-print(f"Total inventory value: {total_value:,.2f} THB")
+# Calculate total value
+if 'price' in merged.columns and 'stock' in merged.columns:
+    merged['total_value'] = merged['price'] * merged['stock']
+    total_value = merged['total_value'].sum()
+    print(f"Total inventory value: {total_value:,.2f} THB")
+```
+
+### Get Products with Inventory
+
+```python
+# Get merged products and inventory in one call
+merged = client.get_products_with_inventory(branch=1000)
+
+# Filter for in-stock items only
+in_stock = client.filter_dataframe(
+    merged,
+    {"stock": {"gt": 0}}
+)
+
+# Filter for affordable in-stock items
+affordable_in_stock = client.get_products_with_inventory(
+    branch=1000,
+    filters={
+        "stock": {"gt": 0},
+        "price": {"lte": 100}
+    }
+)
 ```
 
 ---
 
-## Payments
+## Payment Processing
 
 ### Create Payment
 
 ```python
+client = VillaClient()
+
 # Basic payment
 payment = client.create_payment(
     order_id="ORDER-12345",
@@ -393,6 +448,7 @@ print(f"Amount: {status['amount']} {status['currency']}")
 ```python
 # Get all payments
 all_payments = client.get_payment_history()
+print(f"Total payments: {len(all_payments)}")
 
 # Filter by order
 order_payments = client.get_payment_history(order_id="ORDER-12345")
@@ -410,9 +466,10 @@ customer_payments = client.get_payment_history(
 )
 
 # Analyze payment data
-print(f"Total payments: {len(all_payments)}")
-print(f"Total revenue: {all_payments['amount'].sum()}")
-print(f"Average payment: {all_payments['amount'].mean()}")
+if len(all_payments) > 0 and 'amount' in all_payments.columns:
+    print(f"Total revenue: {all_payments['amount'].sum():,.2f}")
+    print(f"Average payment: {all_payments['amount'].mean():,.2f}")
+    print(f"Max payment: {all_payments['amount'].max():,.2f}")
 ```
 
 ### Process Refund
@@ -452,7 +509,8 @@ methods = client.get_available_payment_methods(branch=1000)
 for method in methods:
     print(f"{method['name']}: {method['type']}")
     print(f"  Enabled: {method['enabled']}")
-    print(f"  Fees: {method.get('fees', 'N/A')}")
+    if 'fees' in method:
+        print(f"  Fees: {method['fees']}")
 ```
 
 ### Verify Payment
@@ -472,42 +530,193 @@ else:
 
 ---
 
-## Advanced Usage
+## Data Filtering
 
-### Custom Headers
+The SDK provides powerful filtering capabilities for DataFrames.
 
-You can extend services to add custom headers:
+### Exact Match
 
 ```python
-class CustomPaymentService(PaymentService):
-    def create_payment(self, order_id, amount, **kwargs):
-        headers = {
-            "X-API-Key": "your-api-key",
-            "X-Request-ID": str(uuid.uuid4())
-        }
-        return super().create_payment(
-            order_id, amount,
-            headers=headers,
-            **kwargs
-        )
+# Filter by exact value
+filters = {"category": "electronics"}
+filtered = client.filter_dataframe(df, filters)
 ```
+
+### Comparison Operators
+
+```python
+# Greater than
+filters = {"price": {"gt": 100}}
+
+# Less than
+filters = {"price": {"lt": 50}}
+
+# Greater than or equal
+filters = {"price": {"gte": 100}}
+
+# Less than or equal
+filters = {"price": {"lte": 200}}
+
+# Equal
+filters = {"price": {"eq": 150}}
+
+# Multiple comparisons
+filters = {"price": {"gte": 10, "lte": 100}}
+```
+
+### Multiple Values (OR condition)
+
+```python
+# Match any value in list
+filters = {"category": ["electronics", "food", "clothing"]}
+```
+
+### Multiple Filters (AND condition)
+
+```python
+# All conditions must match
+filters = {
+    "category": "electronics",
+    "price": {"gt": 100},
+    "in_stock": True,
+    "available": True
+}
+```
+
+### Complex Filtering Examples
+
+```python
+# Products between $10-$100 in electronics category
+filters = {
+    "category": "electronics",
+    "price": {"gte": 10, "lte": 100}
+}
+
+# Low stock items in multiple categories
+filters = {
+    "category": ["electronics", "food"],
+    "stock": {"lt": 10}
+}
+
+# Available products with price range
+filters = {
+    "available": True,
+    "price": {"gte": 20, "lte": 500},
+    "stock": {"gt": 0}
+}
+```
+
+---
+
+## Caching
+
+The SDK automatically caches API responses in S3 to improve performance and reduce API calls.
+
+### How Caching Works
+
+1. **GET requests** are automatically cached
+2. **POST/PUT/DELETE requests** are not cached
+3. Cache is checked **before** making API calls
+4. Successful responses are **automatically stored** in cache
+
+### Cache Keys
+
+Cache keys follow this pattern:
+- Products: `villa-sdk/products/{branch}.json`
+- Inventory: `villa-sdk/inventory/{branch}.json`
+- Payments: `villa-sdk/payments/{payment_id}.json`
+
+### Manual Cache Management
+
+```python
+client = VillaClient()
+
+# Check if data is cached
+is_cached = client.cache.is_cached("products/1000.json")
+
+# Get cached data directly
+cached_data = client.cache.get_cached("products/1000.json")
+
+# Invalidate cache
+client.cache.invalidate("products/1000.json")
+
+# Force fresh data fetch
+client.cache.invalidate("products/1000.json")
+products = client.get_product_list(branch=1000)
+```
+
+### Cache Best Practices
+
+```python
+# Good: Let SDK handle caching automatically
+products = client.get_product_list(branch=1000)  # Cached automatically
+
+# Good: Invalidate cache when data might have changed
+client.cache.invalidate("products/1000.json")
+products = client.get_product_list(branch=1000)  # Fresh data
+
+# Good: Check cache before expensive operations
+if client.cache.is_cached("products/1000.json"):
+    print("Using cached data")
+else:
+    print("Fetching fresh data")
+```
+
+### Custom Cache Prefix
+
+```python
+from villa_ecommerce_sdk.cache import S3Cache
+
+# Create cache with custom prefix
+cache = S3Cache(
+    bucket_name="my-bucket",
+    prefix="my-custom-prefix"
+)
+
+client = VillaClient(s3_bucket="my-bucket")
+# Cache will use "my-custom-prefix" prefix
+```
+
+---
+
+## Advanced Usage
 
 ### Batch Operations
 
 ```python
-# Process multiple payments
-orders = ["ORDER-1", "ORDER-2", "ORDER-3"]
-payments = []
+# Process multiple branches
+branches = [1000, 1001, 1002]
+all_products = []
 
-for order_id in orders:
+for branch in branches:
+    products = client.get_product_list(branch=branch)
+    products['branch'] = branch
+    all_products.append(products)
+
+combined = pd.concat(all_products, ignore_index=True)
+print(f"Total products across all branches: {len(combined)}")
+```
+
+### Batch Payments
+
+```python
+# Process multiple payments
+orders = [
+    {"order_id": "ORDER-1", "amount": 1000.00},
+    {"order_id": "ORDER-2", "amount": 2000.00},
+    {"order_id": "ORDER-3", "amount": 1500.00}
+]
+
+payments = []
+for order in orders:
     try:
         payment = client.create_payment(
-            order_id=order_id,
-            amount=1000.00
+            order_id=order["order_id"],
+            amount=order["amount"]
         )
         payments.append(payment)
     except Exception as e:
-        print(f"Failed to create payment for {order_id}: {e}")
+        print(f"Failed to create payment for {order['order_id']}: {e}")
 
 print(f"Successfully created {len(payments)} payments")
 ```
@@ -515,6 +724,9 @@ print(f"Successfully created {len(payments)} payments")
 ### Data Export
 
 ```python
+import pandas as pd
+import json
+
 # Export to CSV
 products = client.get_product_list(branch=1000)
 products.to_csv('products.csv', index=False)
@@ -524,61 +736,36 @@ inventory = client.get_inventory(branch=1000)
 inventory.to_excel('inventory.xlsx', index=False)
 
 # Export to JSON
-import json
 payment_history = client.get_payment_history()
 payment_history.to_json('payments.json', orient='records', indent=2)
+
+# Export to Parquet (efficient for large datasets)
+products.to_parquet('products.parquet', index=False)
 ```
 
-### Caching Strategy
+### Custom Headers
+
+You can extend services to add custom headers:
 
 ```python
-# Check if data is cached
-is_cached = client.cache.is_cached("products/1000.json")
+from villa_ecommerce_sdk.payments import PaymentService
+import uuid
 
-# Get cached data directly
-cached_data = client.cache.get_cached("products/1000.json")
-
-# Invalidate cache when needed
-client.cache.invalidate("products/1000.json")
-
-# Force fresh data fetch
-client.cache.invalidate("products/1000.json")
-products = client.get_product_list(branch=1000)
-```
-
----
-
-## Error Handling
-
-### Common Exceptions
-
-```python
-from villa_ecommerce_sdk import VillaClient
-
-client = VillaClient()  # Uses default bucket: villa-ecommerce-sdk-cache
-
-try:
-    products = client.get_product_list(branch=1000)
-except Exception as e:
-    if "Failed to fetch" in str(e):
-        print("Network or API error")
-    elif "Error processing" in str(e):
-        print("Data processing error")
-    else:
-        print(f"Unexpected error: {e}")
-```
-
-### Payment Error Handling
-
-```python
-try:
-    payment = client.create_payment(
-        order_id="ORDER-123",
-        amount=1000.00
-    )
-except Exception as e:
-    print(f"Payment creation failed: {e}")
-    # Handle error (retry, log, notify, etc.)
+class CustomPaymentService(PaymentService):
+    def create_payment(self, order_id, amount, **kwargs):
+        headers = {
+            "X-API-Key": "your-api-key",
+            "X-Request-ID": str(uuid.uuid4())
+        }
+        return super()._post(
+            endpoint="/api/payment/create",
+            json_data={
+                "orderId": order_id,
+                "amount": amount,
+                **kwargs
+            },
+            headers=headers
+        )
 ```
 
 ### Retry Logic
@@ -607,6 +794,75 @@ def retry_on_failure(max_retries=3, delay=1):
 @retry_on_failure(max_retries=3, delay=2)
 def get_products_with_retry(client, branch):
     return client.get_product_list(branch=branch)
+
+products = get_products_with_retry(client, 1000)
+```
+
+---
+
+## Error Handling
+
+### Common Exceptions
+
+```python
+from villa_ecommerce_sdk import VillaClient
+
+client = VillaClient()
+
+try:
+    products = client.get_product_list(branch=1000)
+except Exception as e:
+    if "Failed to fetch" in str(e):
+        print("Network or API error")
+    elif "Error processing" in str(e):
+        print("Data processing error")
+    else:
+        print(f"Unexpected error: {e}")
+```
+
+### Payment Error Handling
+
+```python
+try:
+    payment = client.create_payment(
+        order_id="ORDER-123",
+        amount=1000.00
+    )
+except Exception as e:
+    print(f"Payment creation failed: {e}")
+    # Handle error (retry, log, notify, etc.)
+```
+
+### Safe Data Fetching
+
+```python
+def safe_get_products(client, branch):
+    try:
+        return client.get_product_list(branch=branch)
+    except Exception as e:
+        print(f"Error fetching products: {e}")
+        # Return empty DataFrame or cached data
+        return pd.DataFrame()
+
+products = safe_get_products(client, 1000)
+```
+
+### Error Recovery
+
+```python
+def get_products_with_fallback(client, branch):
+    try:
+        # Try to get fresh data
+        return client.get_product_list(branch=branch)
+    except Exception:
+        # Fallback to cache
+        cached = client.cache.get_cached(f"products/{branch}.json")
+        if cached:
+            return pd.DataFrame(cached)
+        # Last resort: empty DataFrame
+        return pd.DataFrame()
+
+products = get_products_with_fallback(client, 1000)
 ```
 
 ---
@@ -617,7 +873,7 @@ def get_products_with_retry(client, branch):
 
 ```python
 # Good: Create once, reuse many times
-client = VillaClient()  # Uses default bucket
+client = VillaClient()
 products = client.get_product_list(branch=1000)
 inventory = client.get_inventory(branch=1000)
 payments = client.get_payment_history()
@@ -631,7 +887,6 @@ inventory = VillaClient().get_inventory(branch=1000)
 
 ```python
 # The SDK automatically caches GET requests
-# Cache is checked before making API calls
 products = client.get_product_list(branch=1000)  # API call + cache
 products = client.get_product_list(branch=1000)  # From cache
 
@@ -647,7 +902,6 @@ def safe_get_products(client, branch):
         return client.get_product_list(branch=branch)
     except Exception as e:
         print(f"Error fetching products: {e}")
-        # Return empty DataFrame or cached data
         return pd.DataFrame()
 ```
 
@@ -668,7 +922,7 @@ def process_products(
     return products
 ```
 
-### 5. Batch Operations
+### 5. Batch Operations Efficiently
 
 ```python
 # Process multiple branches efficiently
@@ -683,13 +937,27 @@ for branch in branches:
 combined = pd.concat(all_products, ignore_index=True)
 ```
 
+### 6. Validate Data Before Processing
+
+```python
+products = client.get_product_list(branch=1000)
+
+# Check if required columns exist
+required_columns = ['id', 'name', 'price']
+missing = [col for col in required_columns if col not in products.columns]
+
+if missing:
+    print(f"Warning: Missing columns: {missing}")
+else:
+    # Process data safely
+    total_value = products['price'].sum()
+```
+
 ---
 
 ## Extending the SDK
 
-### Creating a New Service
-
-1. **Create Service Class**:
+### Creating a Custom Service
 
 ```python
 from villa_ecommerce_sdk.base import BaseService
@@ -716,9 +984,49 @@ class OrdersService(BaseService):
             endpoint="/api/orders/create",
             json_data=order_data
         )
+    
+    def get_orders(self, branch: int = 1000) -> pd.DataFrame:
+        """Get all orders for a branch."""
+        cache_key = f"orders/{branch}.json"
+        data = self._get(
+            endpoint=f"/api/orders/{branch}",
+            cache_key=cache_key
+        )
+        
+        if isinstance(data, dict):
+            if 'orders' in data:
+                orders_list = data['orders']
+            elif 'data' in data:
+                orders_list = data['data']
+            else:
+                orders_list = [data] if not isinstance(data, list) else data
+        else:
+            orders_list = data if isinstance(data, list) else [data]
+        
+        return pd.DataFrame(orders_list)
 ```
 
-2. **Add to Client**:
+### Using Custom Service
+
+```python
+from villa_ecommerce_sdk.cache import S3Cache
+from orders_service import OrdersService
+
+# Initialize cache
+cache = S3Cache(bucket_name="villa-ecommerce-sdk-cache")
+
+# Initialize custom service
+orders_service = OrdersService(
+    base_url="https://shop.villamarket.com",
+    cache=cache
+)
+
+# Use the service
+order = orders_service.get_order(order_id="ORDER-123")
+orders = orders_service.get_orders(branch=1000)
+```
+
+### Adding Custom Service to Client
 
 ```python
 # In client.py __init__ method
@@ -735,9 +1043,15 @@ def get_order(self, order_id: str) -> Dict[str, Any]:
 
 ```python
 from villa_ecommerce_sdk.cache import S3Cache
+from typing import Optional
+from datetime import datetime, timedelta
 
-class CustomCache(S3Cache):
+class TTLCache(S3Cache):
     """Custom cache with TTL support."""
+    
+    def __init__(self, bucket_name: str, prefix: str = "villa-sdk", ttl_hours: int = 24):
+        super().__init__(bucket_name, prefix)
+        self.ttl_hours = ttl_hours
     
     def get_cached(self, key: str) -> Optional[dict]:
         data = super().get_cached(key)
@@ -746,10 +1060,202 @@ class CustomCache(S3Cache):
             return None
         return data
     
+    def set_cached(self, key: str, data: dict) -> None:
+        # Add timestamp to data
+        data['_cached_at'] = datetime.now().isoformat()
+        super().set_cached(key, data)
+    
     def _is_expired(self, data: dict) -> bool:
-        # Implement TTL logic
-        return False
+        if '_cached_at' not in data:
+            return True
+        
+        cached_at = datetime.fromisoformat(data['_cached_at'])
+        expiry = cached_at + timedelta(hours=self.ttl_hours)
+        return datetime.now() > expiry
 ```
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+#### Issue: "No module named 'villa_ecommerce_sdk'"
+
+**Solution:** Install the package:
+```bash
+pip install villa-ecommerce-sdk
+```
+
+Or install from source:
+```bash
+cd python
+pip install -e .
+```
+
+#### Issue: "AccessDenied" when accessing S3
+
+**Solution:** 
+1. Check AWS credentials are configured correctly
+2. Verify IAM permissions include S3 access
+3. Ensure bucket exists and is accessible
+4. Check bucket name is correct
+
+#### Issue: "Failed to fetch product list"
+
+**Solution:**
+- Check your internet connection
+- Verify the API endpoint is accessible
+- Check if the branch ID is valid
+- Review error message for specific details
+
+#### Issue: Cache not working
+
+**Solution:**
+- Verify S3 bucket exists and is accessible
+- Check AWS credentials are configured
+- Ensure IAM permissions are correct
+- Verify cache key format is correct
+
+#### Issue: DataFrame is empty
+
+**Solution:**
+- Check API response structure
+- Verify branch ID is valid
+- Check if filters are too restrictive
+- Review API response format
+
+### Debug Mode
+
+```python
+import logging
+
+# Enable debug logging
+logging.basicConfig(level=logging.DEBUG)
+
+# SDK will log all requests and responses
+client = VillaClient()
+```
+
+### Verify Setup
+
+```python
+from villa_ecommerce_sdk import VillaClient
+import boto3
+
+# Test AWS credentials
+try:
+    s3 = boto3.client('s3')
+    s3.list_buckets()
+    print("✓ AWS credentials working")
+except Exception as e:
+    print(f"✗ AWS credentials error: {e}")
+
+# Test SDK
+try:
+    client = VillaClient()
+    print("✓ SDK initialized")
+except Exception as e:
+    print(f"✗ SDK initialization error: {e}")
+
+# Test cache
+try:
+    is_cached = client.cache.is_cached("test.json")
+    print("✓ Cache access working")
+except Exception as e:
+    print(f"✗ Cache access error: {e}")
+```
+
+---
+
+## API Reference
+
+### VillaClient
+
+Main client class for interacting with Villa Market APIs.
+
+#### `__init__(s3_bucket: Optional[str] = None, base_url: str = "https://shop.villamarket.com")`
+
+Initialize the Villa API client.
+
+**Parameters:**
+- `s3_bucket` (str, optional): Name of the S3 bucket to use for caching. Defaults to `villa-ecommerce-sdk-cache`
+- `base_url` (str, optional): Base URL for Villa API. Defaults to `https://shop.villamarket.com`
+
+#### `get_product_list(branch: int = 1000) -> pd.DataFrame`
+
+Get product list for a specific branch.
+
+**Parameters:**
+- `branch` (int, optional): Branch ID. Defaults to 1000
+
+**Returns:**
+- `pd.DataFrame`: DataFrame containing product data
+
+#### `get_inventory(branch: int = 1000) -> pd.DataFrame`
+
+Get inventory data for a specific branch.
+
+**Parameters:**
+- `branch` (int, optional): Branch ID. Defaults to 1000
+
+**Returns:**
+- `pd.DataFrame`: DataFrame containing inventory data
+
+#### `get_products_with_inventory(branch: int = 1000, filters: Optional[Dict[str, Any]] = None) -> pd.DataFrame`
+
+Get merged products and inventory data with optional filtering.
+
+**Parameters:**
+- `branch` (int, optional): Branch ID. Defaults to 1000
+- `filters` (dict, optional): Dictionary of filters to apply
+
+**Returns:**
+- `pd.DataFrame`: Merged and filtered DataFrame
+
+#### `filter_dataframe(df: pd.DataFrame, filters: Dict[str, Any]) -> pd.DataFrame`
+
+Filter a DataFrame based on provided criteria.
+
+**Parameters:**
+- `df` (pd.DataFrame): DataFrame to filter
+- `filters` (dict): Dictionary of filter criteria
+
+**Returns:**
+- `pd.DataFrame`: Filtered DataFrame
+
+#### Payment Methods
+
+- `create_payment(order_id, amount, currency="THB", payment_method="credit_card", ...) -> Dict[str, Any]`
+- `get_payment_status(payment_id) -> Dict[str, Any]`
+- `get_payment_history(order_id=None, customer_id=None, start_date=None, end_date=None, limit=100) -> pd.DataFrame`
+- `process_refund(payment_id, amount=None, reason=None) -> Dict[str, Any]`
+- `get_refund_status(refund_id) -> Dict[str, Any]`
+- `get_available_payment_methods(branch=1000) -> list`
+- `verify_payment(payment_id, order_id) -> Dict[str, Any]`
+
+### BaseService
+
+Base class for all SDK services.
+
+#### Methods
+
+- `_get(endpoint, cache_key=None, params=None) -> Dict[str, Any]`
+- `_post(endpoint, json_data=None, headers=None) -> Dict[str, Any]`
+- `_put(endpoint, json_data=None, headers=None) -> Dict[str, Any]`
+- `_delete(endpoint, headers=None) -> Dict[str, Any]`
+- `get_service_name() -> str` (abstract)
+
+### S3Cache
+
+S3-based cache for storing API responses.
+
+#### Methods
+
+- `get_cached(key) -> Optional[dict]`
+- `set_cached(key, data) -> None`
+- `is_cached(key) -> bool`
+- `invalidate(key) -> None`
 
 ---
 
@@ -759,7 +1265,7 @@ class CustomCache(S3Cache):
 from villa_ecommerce_sdk import VillaClient
 import pandas as pd
 
-# Initialize client (uses default bucket: villa-ecommerce-sdk-cache)
+# Initialize client
 client = VillaClient()
 
 # 1. Get available products
@@ -822,44 +1328,11 @@ print(f"\nRecent Payments: {len(recent_payments)}")
 
 ---
 
-## Troubleshooting
-
-### Common Issues
-
-1. **S3 Access Denied**
-   - Check AWS credentials
-   - Verify IAM permissions
-   - Ensure bucket exists
-
-2. **API Timeout**
-   - Check network connection
-   - Verify API endpoint is accessible
-   - Increase timeout if needed
-
-3. **Cache Not Working**
-   - Verify S3 bucket permissions
-   - Check cache key format
-   - Ensure cache service is initialized
-
-### Debug Mode
-
-```python
-import logging
-
-# Enable debug logging
-logging.basicConfig(level=logging.DEBUG)
-
-# SDK will log all requests and responses
-client = VillaClient()  # Uses default bucket
-```
-
----
-
 ## Support and Resources
 
 - **Documentation**: See `/docs` directory
 - **API Reference**: See `/docs/api/python.md`
-- **Examples**: See `/python/tests/` directory
+- **Examples**: See `/docs/examples/python/` directory
 - **Issues**: Report on GitHub
 
 ---
@@ -871,4 +1344,3 @@ MIT License
 ---
 
 **Last Updated**: 2024
-

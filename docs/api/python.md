@@ -311,3 +311,4 @@ When using `get_products_with_inventory()`, the DataFrames are merged on common 
 
 See the [README](../README.md) for more examples.
 
+

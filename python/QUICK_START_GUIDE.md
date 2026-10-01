@@ -136,7 +136,7 @@ filtered = client.filter_dataframe(
 ```python
 from villa_ecommerce_sdk import VillaClient
 
-client = VillaClient(s3_bucket="your-bucket")
+client = VillaClient()  # Uses default bucket: villa-ecommerce-sdk-cache
 
 # 1. Show available products
 products = client.get_products_with_inventory(

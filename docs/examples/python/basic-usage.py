@@ -48,3 +48,4 @@ if 'stock' in merged.columns:
     print(f"In-stock items: {len(in_stock)}")
 print()
 
+
